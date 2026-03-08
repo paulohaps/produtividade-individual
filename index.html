@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN Gateway | Acesso Seguro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --surface: #ffffff;
+            --background: #f1f5f9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .auth-container {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            max-width: 420px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header svg {
+            width: 48px;
+            height: 48px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 8px 0 0;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        input[type="text"], 
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="text"]:focus, 
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            background: var(--surface);
+        }
+
+        input.invalid { border-color: var(--danger); background: #fef2f2; }
+        input.valid { border-color: var(--success); background: #ecfdf5; }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.75rem;
+            margin-top: 6px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .terms-box {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: #f8fafc;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 100px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-top: 3px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-group label {
+            font-size: 0.875rem;
+            color: var(--text-main);
+            cursor: pointer;
+            line-height: 1.4;
+            font-weight: 400;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-content { display: block; }
+        button.loading .btn-content { display: none; }
+        button.loading .spinner { display: block; }
+
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="header">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        <h1>Gateway de Borda</h1>
+        <p>Autenticação e Auditoria de Segurança</p>
+    </div>
+    
+    <form id="mikrotik-form" method="post" style="display: none;">
+        <input type="hidden" name="username" id="mk_user">
+        <input type="hidden" name="password" id="mk_pass">
+        <input type="hidden" name="dst" id="mk_dst" value="">
+        <input type="hidden" name="popup" value="true">
+    </form>
+
+    <div class="form-group">
+        <label for="vpn_user">Usuário VPN</label>
+        <input type="text" id="vpn_user" placeholder="Digite seu usuário" required autocomplete="off">
+    </div>
+    
+    <div class="form-group">
+        <label for="vpn_pass">Senha</label>
+        <input type="password" id="vpn_pass" placeholder="••••••••" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="identificacao_doc">CPF (Assinatura Digital)</label>
+        <input type="text" id="identificacao_doc" maxlength="14" placeholder="000.000.000-00" required autocomplete="off">
+        <div id="cpf-error" class="error-msg">O CPF inserido é matematicamente inválido.</div>
+    </div>
+
+    <div class="terms-box">
+        <strong>Termos de Uso e Compliance:</strong><br><br>
+        1. O tráfego nesta rede privada virtual (VPN) é provido sob estrita conformidade com as legislações vigentes.<br>
+        2. É categoricamente <strong>PROIBIDO</strong> o uso deste túnel para tráfego P2P (Torrent), ataques de negação de serviço (DDoS), SPAM ou acesso a conteúdo protegido por direitos autorais sem licença (DMCA).<br>
+        3. Para fins de auditoria, o endereço IP de origem, MAC Address, data, hora e o CPF fornecido serão registrados de forma imutável.<br>
+        4. O fornecimento do CPF atua como aceite digital irrevogável destes termos.
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="accept_terms">
+        <label for="accept_terms">Declaro que li, compreendi e assumo responsabilidade legal sobre o uso da rede.</label>
+    </div>
+
+    <button id="btn_connect" disabled onclick="processarAuditoria()">
+        <span class="btn-content">Autenticar e Conectar</span>
+        <div class="spinner"></div>
+    </button>
+</div>
+
+<script>
+    // URL exata do seu Webhook
+    const GOOGLE_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyGu5S2E-VaeuOMgaW6MFIZZ4I9QfKhLj4YoRfnFaeWJ-NhXPQZFsBmvl8VwO0yRNkm/exec";
+
+    const cpfInput = document.getElementById('identificacao_doc');
+    const termsCheckbox = document.getElementById('accept_terms');
+    const btnConnect = document.getElementById('btn_connect');
+    const cpfError = document.getElementById('cpf-error');
+
+    // Validação de Módulo 11 da Receita Federal
+    function validarCPF(cpf) {
+        cpf = cpf.replace(/[^\d]+/g,'');
+        if(cpf === '') return false;
+        if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+        
+        let add = 0;
+        for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i);
+        let rev = 11 - (add % 11);
+        if (rev === 10 || rev === 11) rev = 0;
+        if (rev !== parseInt(cpf.charAt(9))) return false;
+        
+        add = 0;
+        for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i);
+        rev = 11 - (add % 11);
+        if (rev === 10 || rev === 11) rev = 0;
+        if (rev !== parseInt(cpf.charAt(10))) return false;
+        
+        return true;
+    }
+
+    // Máscara e Validação em tempo real
+    cpfInput.addEventListener('input', function(e) {
+        let val = this.value.replace(/\D/g, ''); // Remove não números
+        
+        // Aplica a máscara 000.000.000-00
+        if (val.length > 11) val = val.slice(0, 11);
+        if (val.length > 9) {
+            val = val.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+        } else if (val.length > 6) {
+            val = val.replace(/(\d{3})(\d{3})(\d{1,3})/, "$1.$2.$3");
+        } else if (val.length > 3) {
+            val = val.replace(/(\d{3})(\d{1,3})/, "$1.$2");
+        }
+        this.value = val;
+
+        const cleanCpf = this.value.replace(/\D/g, '');
+        
+        if (cleanCpf.length === 11) {
+            if (validarCPF(cleanCpf)) {
+                this.classList.remove('invalid');
+                this.classList.add('valid');
+                cpfError.style.display = 'none';
+                avaliarFormulario();
+            } else {
+                this.classList.remove('valid');
+                this.classList.add('invalid');
+                cpfError.style.display = 'block';
+                btnConnect.disabled = true;
+            }
+        } else {
+            this.classList.remove('valid', 'invalid');
+            cpfError.style.display = 'none';
+            btnConnect.disabled = true;
+        }
+    });
+
+    termsCheckbox.addEventListener('change', avaliarFormulario);
+    document.getElementById('vpn_user').addEventListener('input', avaliarFormulario);
+    document.getElementById('vpn_pass').addEventListener('input', avaliarFormulario);
+
+    function avaliarFormulario() {
+        const cleanCpf = cpfInput.value.replace(/\D/g, '');
+        const cpfValido = cleanCpf.length === 11 && validarCPF(cleanCpf);
+        const userPreenchido = document.getElementById('vpn_user').value.trim() !== '';
+        const passPreenchida = document.getElementById('vpn_pass').value.trim() !== '';
+        
+        btnConnect.disabled = !(termsCheckbox.checked && cpfValido && userPreenchido && passPreenchida);
+    }
+
+    async function processarAuditoria() {
+        const user = document.getElementById('vpn_user').value;
+        const pass = document.getElementById('vpn_pass').value;
+        const rawCpf = document.getElementById('identificacao_doc').value;
+        const doc = rawCpf.replace(/\D/g, ''); // Envia apenas os números
+        
+        if(!user || !pass || !validarCPF(doc)) return;
+
+        // Estado de Loading
+        btnConnect.classList.add('loading');
+        btnConnect.disabled = true;
+
+        const formData = new URLSearchParams();
+        formData.append('origem', 'HTML_FrontEnd');
+        formData.append('vpn_user', user);
+        formData.append('identificacao_doc', rawCpf); 
+        formData.append('user_agent', navigator.userAgent);
+        
+        // Captura metadados injetados pelo MikroTik na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        formData.append('client_ip', urlParams.get('ip') || 'Desconhecido');
+        formData.append('client_mac', urlParams.get('mac') || 'Desconhecido');
+
+        // Configura a URL de postback para o MikroTik
+        // Por padrão o MikroTik manda a var 'link-login-only' ou o IP na query string
+        const mikrotikLoginUrl = urlParams.get('login_url') || "http://192.168.88.1/login";
+        document.getElementById('mikrotik-form').action = mikrotikLoginUrl;
+        document.getElementById('mk_dst').value = urlParams.get('dst') || "";
+
+        try {
+            // Requisição assíncrona para o Google Apps Script
+            await fetch(GOOGLE_WEBHOOK_URL, {
+                method: 'POST',
+                body: formData,
+                mode: 'no-cors' // Impede bloqueio de Cross-Origin
+            });
+
+            // Transfere credenciais para o form oculto e submete ao Roteador
+            document.getElementById('mk_user').value = user;
+            document.getElementById('mk_pass').value = pass;
+            document.getElementById('mikrotik-form').submit();
+
+        } catch (error) {
+            console.error("Erro de auditoria:", error);
+            alert("Não foi possível estabelecer conexão segura com o servidor de auditoria.");
+            btnConnect.classList.remove('loading');
+            btnConnect.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
